@@ -48,8 +48,13 @@ async function newPledge({ text, requester }) {
   return `Successfully added pledge: "${content} by ${humanReadableDeadline} (${formatDate(deadline)})"`;
 }
 
-async function getPledgesList() {
-  return 'list!';
+async function getPledgesList(requester) {
+  const { requests, pledges } = await db.getList(requester);
+
+  const myPledges = `*My pledges:*\n${pledges.map(p => `\n • ${p.content} _for ${p.requester}_ *by ${p.deadline}*`)}`;
+  const myRequests = `*My requests:*\n${requests.map(p => `\n • _${p.performer}_ pledged to ${p.content} *by ${p.deadline}*`)}`;
+
+  return `${myPledges}\n\n${myRequests}`;
 }
 
 // EXPRESS SERVER
@@ -65,7 +70,7 @@ app.post('/slackCommand', async ({ body: { text, user_name } }, res) => {
   try {
     switch (text.trim()) {
       case 'list':
-        return res.send(await getPledgesList({ text, requester }));
+        return res.send(await getPledgesList(requester));
       default:
         return res.send(await newPledge({ text, requester }));
     }

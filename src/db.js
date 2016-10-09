@@ -1,5 +1,6 @@
 import db from 'sqlite';
 import config from '../config.json';
+import { formatDate } from './utils';
 
 const createTables = () => {
   return db.run(`
@@ -14,9 +15,20 @@ const createTables = () => {
   );
 };
 
-export const init = async () => {
-  await db.open(config.db);
-  await createTables();
+export const getList = async requester => {
+  const requests = (await db.all(`
+    SELECT requester, performer, content, deadline
+    FROM pledges
+    WHERE requester = ?
+  `, requester)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
+
+  const pledges = (await db.all(`
+    SELECT requester, performer, content, deadline
+    FROM pledges
+    WHERE performer = ?
+  `, requester)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
+
+  return { requests, pledges };
 };
 
 export const insertPledge = ({ requester, performer, content, deadline }) => {
@@ -25,4 +37,9 @@ export const insertPledge = ({ requester, performer, content, deadline }) => {
     VALUES (?, ?, ?, ?, ?)
   `, requester, performer, content, deadline, Date.now()
   );
+};
+
+export const init = async () => {
+  await db.open(config.db);
+  await createTables();
 };
