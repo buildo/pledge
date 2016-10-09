@@ -17,13 +17,13 @@ const createTables = () => {
 
 export const getList = async requester => {
   const requests = (await db.all(`
-    SELECT requester, performer, content, deadline
+    SELECT id, requester, performer, content, deadline
     FROM pledges
     WHERE requester = ?
   `, requester)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
 
   const pledges = (await db.all(`
-    SELECT requester, performer, content, deadline
+    SELECT id, requester, performer, content, deadline
     FROM pledges
     WHERE performer = ?
   `, requester)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
@@ -38,6 +38,15 @@ export const insertPledge = ({ requester, performer, content, deadline }) => {
   `, requester, performer, content, deadline, Date.now()
   );
 };
+
+export const deletePledge = pledgeId => {
+  return db.run(`
+    DELETE FROM pledges
+    WHERE id = ?
+  `, pledgeId
+  );
+};
+
 
 export const init = async () => {
   await db.open(config.db);

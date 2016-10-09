@@ -51,8 +51,8 @@ async function newPledge({ text, requester }) {
 async function getPledgesList(requester) {
   const { requests, pledges } = await db.getList(requester);
 
-  const myPledges = `*My pledges:*\n${pledges.map(p => `\n • ${p.content} _for ${p.requester}_ *by ${p.deadline}*`)}`;
-  const myRequests = `*My requests:*\n${requests.map(p => `\n • _${p.performer}_ pledged to ${p.content} *by ${p.deadline}*`)}`;
+  const myPledges = `*My pledges:*\n${pledges.map(p => `\n • ${p.content} _for ${p.requester}_ *by ${p.deadline}* <https://pledge.our.buildo.io/deletePledge/${p.id}|delete>`)}`;
+  const myRequests = `*My requests:*\n${requests.map(p => `\n • _${p.performer}_ pledged to ${p.content} *by ${p.deadline}* <https://pledge.our.buildo.io/deletePledge/${p.id}|delete>`)}`;
 
   return `${myPledges}\n\n${myRequests}`;
 }
@@ -77,6 +77,15 @@ app.post('/slackCommand', async ({ body: { text, user_name } }, res) => {
   } catch (err) {
     debug(err);
     res.send(`Error: ${err.message}`);
+  }
+});
+
+app.get('/deletePledge/:pledgeId', async ({ params: { pledgeId } }, res) => {
+  try {
+    db.deletePledge(pledgeId);
+    res.send(`Successfully deleted pledge #${pledgeId}`);
+  } catch (e) {
+    res.send(`Error: ${e.message}`);
   }
 });
 
