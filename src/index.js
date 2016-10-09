@@ -6,16 +6,11 @@ import bodyParser from 'body-parser';
 import _debug from 'debug';
 import human2date from 'date.js';
 import config from '../config.json';
+import { formatDate } from './utils';
 
 const INCOMING_WEBHOOK_URL = config.slack.incomingWebhookURL;
 
 const debug = _debug('pledge');
-
-const formatDate = date => {
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-  return `${date.getDate()} ${months[date.getMonth()]} at ${date.getHours()}:${date.getMinutes()}`;
-};
 
 const postOnSlack = json => request({
   json,
