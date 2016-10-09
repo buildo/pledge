@@ -1,9 +1,8 @@
 import express from 'express';
-import request from 'request';
+import request from 'request-promise';
 import bodyParser from 'body-parser';
 import 'babel-core/register';
 import 'babel-polyfill';
-import { last } from 'lodash';
 //import db from 'sqlite';
 import config from '../config.json';
 import _debug from 'debug';
@@ -11,7 +10,7 @@ import _debug from 'debug';
 const debug = _debug('pledge');
 
 const app = express();
-//app.use(bodyParser.json());
+app.use(bodyParser.json());
 //app.use((req, res, next) => {
   //res.header('Access-Control-Allow-Origin', '*');
   //res.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
@@ -41,7 +40,7 @@ const app = express();
   //return !createdAt || new Date(createdAt).getTime() < date;
 //};
 
-const INTERVAL = 1000 * config.interval;
+// const INTERVAL = 1000 * config.interval;
 const INCOMING_WEBHOOK_URL = config.slack.incomingWebhookURL;
 
 //const insertReminder = ({ issueNo, repo, userId, date, type, enterprise }) => {
@@ -276,22 +275,20 @@ const INCOMING_WEBHOOK_URL = config.slack.incomingWebhookURL;
   //setInterval(checkReminders, INTERVAL);
 //}
 
-request({
+const postOnSlack = json => request({
+  json,
   url: INCOMING_WEBHOOK_URL,
-  method: "POST",
-  json: {
-    text: "@francesco says: \"can you clean the dishes by tuesday at 3pm?\" <http://buildo.io|yes>",
-    channel: "@luca",
-    username: "pledge",
-    icon_emoji: ":dog:",
-  }
-}, function (error, response, body) {
-  if (!error && response.statusCode == 200) {
-    console.log(body)
-  }
-})
+  method: 'POST'
+});
 
-app.post('/pledge', async ({ query, body, params }, res) => {
+postOnSlack({
+  text: '@francesco says: "can you clean the dishes by tuesday at 3pm?" <http://buildo.io|yes>',
+  channel: '@francesco',
+  username: 'pledge',
+  icon_emoji: ':dog:'
+});
+
+app.post('/newPledge', async ({ query, body, params }, res) => {
   try {
     debug({ query, body, params });
     //const { issueNo, repo, userId, date, type, enterprise } = query;
