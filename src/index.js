@@ -291,6 +291,20 @@ request({
   }
 })
 
+app.post('/pledge', async ({ query, body, params }, res) => {
+  try {
+    debug({ query, body, params });
+    //const { issueNo, repo, userId, date, type, enterprise } = query;
+    //await insertReminder({ issueNo, repo, userId, date, type, enterprise });
+    //const reminder = { issueNo, repo, userId, date, type, enterprise };
+    res.json({ message: 'Success' });
+  } catch (err) {
+    debug(err);
+    res.status(500).json({ err });
+  }
+});
+
+
 app.listen(3000, () => {
   debug('listening on port 3000!');
   //run();
