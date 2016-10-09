@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "pledge is a slack bot that helps your team keep commitments",
   "main": "lib/index.js",
+  "engineStrict": true,
+  "engines" : {
+    "node" : ">=6"
+  },
   "scripts": {
     "lint": "eslint src",
     "lint-fix": "eslint --fix src",
