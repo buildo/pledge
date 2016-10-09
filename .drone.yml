@@ -1,6 +1,8 @@
 build:
   config:
     image: ubuntu
+    commands:
+      - config-ci.json > config.json
 
 publish:
   docker:
