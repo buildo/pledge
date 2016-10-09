@@ -1,0 +1,9 @@
+{
+  "db": "/path/to/db",
+  "domain": "my.deploy.url",
+  "interval": 1,
+  "slack": {
+    "incomingWebhookURL": "https://url/of/incoming/webhook"
+  }
+}
+
