@@ -7,6 +7,7 @@ import _debug from 'debug';
 import human2date from 'date.js';
 import config from '../config.json';
 import { formatDate } from './utils';
+import * as db from './db';
 
 const INCOMING_WEBHOOK_URL = config.slack.incomingWebhookURL;
 
@@ -25,36 +26,38 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.post('/newPledge', async ({ body: { text, user_name } }, res) => {
   try {
     debug({ text, user_name });
-    const [, performer, pledge, deadline] = /(@[a-zA-Z0-9]+) (.+) by (.+)/.exec(text.trim()) || [];
+    const [, performer, content, humanReadableDeadline] = /(@[a-zA-Z0-9]+) (.+) by (.+)/.exec(text.trim()) || [];
 
     if (!performer) {
       throw new Error('"Username" is missing. (@username [what] by [when])');
-    } else if (!pledge) {
+    } else if (!content) {
       throw new Error('"What" is missing. (@username [what] by [when])');
-    } else if (!deadline) {
+    } else if (!humanReadableDeadline) {
       throw new Error('"When" is missing. (@username [what] by [when])');
     }
 
-    const parsedDeadline = human2date(deadline);
+    const deadline = human2date(humanReadableDeadline);
 
-    if (parsedDeadline.getTime() < Date.now()) {
+    if (deadline.getTime() < Date.now()) {
       throw new Error('"When" should be in the future');
     }
 
     const requester = `@${user_name}`;
 
-    postOnSlack({
-      text: `${requester} added a pledge: "${pledge} by ${deadline} (${formatDate(parsedDeadline)})"`,
+    await db.insertPledge({ requester, performer, content, deadline });
+
+    await postOnSlack({
+      text: `${requester} added a pledge: "${content} by ${humanReadableDeadline} (${formatDate(deadline)})"`,
       channel: performer,
       username: 'pledge',
       icon_emoji: ':dog:'
     });
 
-    res.send(`Successfully added pledge: "${pledge} by ${deadline} (${formatDate(parsedDeadline)})"`);
+    res.send(`Successfully added pledge: "${content} by ${humanReadableDeadline} (${formatDate(deadline)})"`);
   } catch (err) {
     debug(err);
     res.send(`Error: ${err.message}`);
   }
 });
 
-app.listen(3000);
+app.listen(3000, db.init);
