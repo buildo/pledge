@@ -28,17 +28,17 @@ app.post('/newPledge', async ({ body: { text, user_name } }, res) => {
     const [, performer, pledge, deadline] = /(@[a-zA-Z0-9]+) (.+) by (.+)/.exec(text.trim()) || [];
 
     if (!performer) {
-      res.send('"Username" is missing. (@username [what] by [when])');
+      throw new Error('"Username" is missing. (@username [what] by [when])');
     } else if (!pledge) {
-      res.send('"What" is missing. (@username [what] by [when])');
+      throw new Error('"What" is missing. (@username [what] by [when])');
     } else if (!deadline) {
-      res.send('"When" is missing. (@username [what] by [when])');
+      throw new Error('"When" is missing. (@username [what] by [when])');
     }
 
     const parsedDeadline = human2date(deadline);
 
     if (parsedDeadline.getTime() < Date.now()) {
-      res.send('"When" should be in the future');
+      throw new Error('"When" should be in the future');
     }
 
     const requester = `@${user_name}`;
@@ -53,7 +53,7 @@ app.post('/newPledge', async ({ body: { text, user_name } }, res) => {
     res.send(`Successfully added pledge: "${pledge} by ${deadline} (${formatDate(parsedDeadline)})"`);
   } catch (err) {
     debug(err);
-    res.status(500).json({ err });
+    res.send(`Error: ${err.message}`);
   }
 });
 
