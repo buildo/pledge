@@ -39,13 +39,13 @@ async function newPledge({ text, requester }) {
   await db.insertPledge({ requester, performer, content, deadline }).then(debug);
 
   await postOnSlack({
-    text: `${requester} added a pledge: "${content} by ${humanReadableDeadline} (${formatDate(deadline)})"`,
+    text: `${requester} asked you to "${content}" by ${humanReadableDeadline} (${formatDate(deadline)})`,
     channel: performer,
     username: 'pledge',
     icon_emoji: ':dog:'
   });
 
-  return `Successfully added pledge: "${content} by ${humanReadableDeadline} (${formatDate(deadline)})"`;
+  return `You asked ${performer} to "${content}" by ${humanReadableDeadline} (${formatDate(deadline)})`;
 }
 
 async function getPledgesList(requester) {
