@@ -19,41 +19,56 @@ const postOnSlack = json => request({
   method: 'POST'
 });
 
+async function newPledge({ text, requester }) {
+  const [, performer, content, humanReadableDeadline] = /(@[a-zA-Z0-9]+) (.+) by (.+)/.exec(text.trim()) || [];
+
+  if (!performer) {
+    throw new Error('"Username" is missing. (@username [what] by [when])');
+  } else if (!content) {
+    throw new Error('"What" is missing. (@username [what] by [when])');
+  } else if (!humanReadableDeadline) {
+    throw new Error('"When" is missing. (@username [what] by [when])');
+  }
+
+  const deadline = human2date(humanReadableDeadline);
+
+  if (deadline.getTime() < Date.now()) {
+    throw new Error('"When" should be in the future');
+  }
+
+  await db.insertPledge({ requester, performer, content, deadline }).then(debug);
+
+  await postOnSlack({
+    text: `${requester} added a pledge: "${content} by ${humanReadableDeadline} (${formatDate(deadline)})"`,
+    channel: performer,
+    username: 'pledge',
+    icon_emoji: ':dog:'
+  });
+
+  return `Successfully added pledge: "${content} by ${humanReadableDeadline} (${formatDate(deadline)})"`;
+}
+
+async function getPledgesList() {
+  return 'list!';
+}
+
+// EXPRESS SERVER
+
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.post('/newPledge', async ({ body: { text, user_name } }, res) => {
+app.post('/slackCommand', async ({ body: { text, user_name } }, res) => {
+  debug({ text, user_name });
+  const requester = `@${user_name}`;
+
   try {
-    debug({ text, user_name });
-    const [, performer, content, humanReadableDeadline] = /(@[a-zA-Z0-9]+) (.+) by (.+)/.exec(text.trim()) || [];
-
-    if (!performer) {
-      throw new Error('"Username" is missing. (@username [what] by [when])');
-    } else if (!content) {
-      throw new Error('"What" is missing. (@username [what] by [when])');
-    } else if (!humanReadableDeadline) {
-      throw new Error('"When" is missing. (@username [what] by [when])');
+    switch (text.trim()) {
+      case 'list':
+        return res.send(await getPledgesList({ text, requester }));
+      default:
+        return res.send(await newPledge({ text, requester }));
     }
-
-    const deadline = human2date(humanReadableDeadline);
-
-    if (deadline.getTime() < Date.now()) {
-      throw new Error('"When" should be in the future');
-    }
-
-    const requester = `@${user_name}`;
-
-    await db.insertPledge({ requester, performer, content, deadline });
-
-    await postOnSlack({
-      text: `${requester} added a pledge: "${content} by ${humanReadableDeadline} (${formatDate(deadline)})"`,
-      channel: performer,
-      username: 'pledge',
-      icon_emoji: ':dog:'
-    });
-
-    res.send(`Successfully added pledge: "${content} by ${humanReadableDeadline} (${formatDate(deadline)})"`);
   } catch (err) {
     debug(err);
     res.send(`Error: ${err.message}`);
