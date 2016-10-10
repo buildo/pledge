@@ -1,21 +1,15 @@
 build:
   config:
-    image: ubuntu
-    commands:
-      - cp config-ci.json config.json
-
-  install:
-    image: quay.io/buildo/node5-npm3
+    image: node:6
     environment:
       - NPM_CONFIG_CACHE=/drone/.npm
       - NPM_CONFIG_LOGLEVEL=warn
     commands:
+      - cp config-ci.json config.json
       - npm install
 
   lint:
-    image: quay.io/buildo/node5-npm3
-    environment:
-      - NPM_CONFIG_CACHE=/drone/.npm
+    image: node:6
     commands:
       - npm run lint
 
@@ -30,8 +24,6 @@ publish:
     tag:
       - latest
       - $$COMMIT
-    when:
-      branch: master
 
 deploy:
   ssh:
