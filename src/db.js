@@ -31,6 +31,15 @@ export const getList = async requester => {
   return { requests, pledges };
 };
 
+export const getPledge = (pledgeId) => {
+  return db.get(`
+    SELECT id, requester, performer, content, deadline
+    FROM pledges
+    WHERE id = ?
+  `, pledgeId
+  );
+};
+
 export const insertPledge = ({ requester, performer, content, deadline }) => {
   return db.run(`
     INSERT INTO pledges (requester, performer, content, deadline, created_at)

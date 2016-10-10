@@ -14,7 +14,7 @@ const INCOMING_WEBHOOK_URL = config.slack.incomingWebhookURL;
 const debug = _debug('pledge');
 
 const postOnSlack = json => request({
-  json,
+  json: { username: 'pledge', icon_emoji: ':dog:', ...json },
   url: INCOMING_WEBHOOK_URL,
   method: 'POST'
 });
@@ -40,9 +40,7 @@ async function newPledge({ text, requester }) {
 
   await postOnSlack({
     text: `${requester} asked you to "${content}" by ${humanReadableDeadline} (${formatDate(deadline)})`,
-    channel: performer,
-    username: 'pledge',
-    icon_emoji: ':dog:'
+    channel: performer
   });
 
   return `You asked ${performer} to "${content}" by ${humanReadableDeadline} (${formatDate(deadline)})`;
@@ -82,7 +80,18 @@ app.post('/slackCommand', async ({ body: { text, user_name } }, res) => {
 
 app.get('/deletePledge/:pledgeId', async ({ params: { pledgeId } }, res) => {
   try {
-    db.deletePledge(pledgeId);
+    const { requester, performer, content } = await db.getPledge(pledgeId);
+    await db.deletePledge(pledgeId);
+    // notify on slack
+    const notificationMessage = `pledge "${content}" has been deleted`;
+    await postOnSlack({
+      text: notificationMessage,
+      channel: performer
+    });
+    await postOnSlack({
+      text: notificationMessage,
+      channel: requester
+    });
     res.send(`Successfully deleted pledge #${pledgeId}`);
   } catch (e) {
     res.send(`Error: ${e.message}`);
