@@ -20,7 +20,7 @@ const postOnSlack = json => request({
 });
 
 const postOnSlackMultipleChannels =
-  (json, channels) => channels.map(c => postOnSlack({channel: c, ...json}));
+  (json, channels) => channels.map(c => postOnSlack({ channel: c, ...json }));
 
 async function newPledge({ text, requester }) {
   const [, performer, content, humanReadableDeadline] = /(@[a-zA-Z0-9]+) (.+) by (.+)/.exec(text.trim()) || [];
