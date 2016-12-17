@@ -10,8 +10,9 @@ const createTables = () => {
       performer TEXT NOT NULL,
       content TEXT NOT NULL,
       deadline INTEGER NOT NULL,
+      expiredNotificationSent BOOLEAN NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL
-    )`
+    );`
   );
 };
 
@@ -45,6 +46,24 @@ export const insertPledge = ({ requester, performer, content, deadline }) => {
     INSERT INTO pledges (requester, performer, content, deadline, created_at)
     VALUES (?, ?, ?, ?, ?)
   `, requester, performer, content, deadline, Date.now()
+  );
+};
+
+export const findAllPledgesExpiredToNotify = () => {
+  return db.all(`
+    SELECT id, requester, performer, content, deadline
+    FROM pledges
+    WHERE deadline < ? AND expiredNotificationSent = 0
+  `, Date.now()
+  );
+};
+
+export const setExpiredNotificationAsSentOnPledge = pledgeId => {
+  return db.run(`
+    UPDATE pledges
+    SET expiredNotificationSent=1
+    WHERE id = ?
+  `, pledgeId
   );
 };
 
