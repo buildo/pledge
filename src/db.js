@@ -23,9 +23,9 @@ const migrateIfNeeded = async () => {
   `) ? undefined : 1);
   // if there is the schemaVersions table we can check the last version
   if (typeof currentVersion === 'undefined') {
-    currentVersion = (await db.get(`SELECT max(version) as v FROM schemaVersions`)).v;
+    currentVersion = (await db.get('SELECT max(version) as v FROM schemaVersions')).v;
   }
-  console.log(`starting pledge version ${currentVersion}`);
+  console.log(`starting pledge version ${currentVersion}`); // eslint-disable-line no-console
   if (currentVersion === 1) {
     // version 1 did not have a schemaVersions table, let's create it
     await db.run(`
@@ -44,7 +44,7 @@ const migrateIfNeeded = async () => {
       ALTER TABLE pledges
       ADD COLUMN expiredNotificationSent BOOLEAN NOT NULL DEFAULT 0`
     );
-    console.log('migrated DB to version 2');
+    console.log('migrated DB to version 2'); // eslint-disable-line no-console
   }
 };
 
