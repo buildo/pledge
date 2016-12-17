@@ -12,6 +12,7 @@ const createTables = async () => {
       performer TEXT NOT NULL,
       content TEXT NOT NULL,
       deadline INTEGER NOT NULL,
+      completed BOOLEAN NOT NULL DEFAULT 0,
       expiredNotificationSent BOOLEAN NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL
     );
@@ -51,6 +52,20 @@ const migrateIfNeeded = async () => {
       ADD COLUMN expiredNotificationSent BOOLEAN NOT NULL DEFAULT 0`
     );
     console.log('migrated DB to version 2'); // eslint-disable-line no-console
+  }
+
+  if (currentVersion < 3) {
+    // add version line with migrationDate = now
+    await db.run(`
+      INSERT INTO schemaVersions values (3, ?)
+    `, Date.now()
+    );
+    // perform migration v2 => v3
+    await db.run(`
+      ALTER TABLE pledges
+      ADD COLUMN completed BOOLEAN NOT NULL DEFAULT 0`
+    );
+    console.log("migrated DB to version 3");
   }
 };
 
@@ -108,6 +123,15 @@ export const setExpiredNotificationAsSentOnPledge = pledgeId => {
 export const deletePledge = pledgeId => {
   return db.run(`
     DELETE FROM pledges
+    WHERE id = ?
+  `, pledgeId
+  );
+};
+
+export const completePledge = pledgeId => {
+  return db.run(`
+    UPDATE pledges
+    SET completed = 1
     WHERE id = ?
   `, pledgeId
   );
