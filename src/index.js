@@ -105,7 +105,18 @@ app.get('/deletePledge/:pledgeId', async ({ params: { pledgeId } }, res) => {
 
 app.get('/completePledge/:pledgeId', async ({ params: { pledgeId } }, res) => {
   try {
-    db.completePledge(pledgeId);
+    const { requester, performer, content } = await db.getPledge(pledgeId);
+    await db.completePledge(pledgeId);
+    // notify on slack
+    const notificationMessage = `pledge "${content}" has been completed !!!`;
+    await postOnSlack({
+      text: notificationMessage,
+      channel: performer
+    });
+    await postOnSlack({
+      text: notificationMessage,
+      channel: requester
+    });
     res.send(`Successfully completed pledge #${pledgeId}`);
   } catch (e) {
     res.send(`Error: ${e.message}`);
