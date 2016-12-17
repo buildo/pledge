@@ -17,14 +17,11 @@ const createTables = () => {
 };
 
 const migrateIfNeeded = async () => {
-  // if there is no table schemaVersions, currentVersion is 1
-  let currentVersion = (await db.get(`
+  const hasSchemaVersionsTable = !!(await db.get(`
     SELECT 1 FROM sqlite_master WHERE name ='schemaVersions' and type='table';
-  `) ? undefined : 1);
-  // if there is the schemaVersions table we can check the last version
-  if (typeof currentVersion === 'undefined') {
-    currentVersion = (await db.get('SELECT max(version) as v FROM schemaVersions')).v;
-  }
+  `));
+  const currentVersion = hasSchemaVersionsTable ?
+    (await db.get(`SELECT max(version) as v FROM schemaVersions`)).v : 1;
   console.log(`starting pledge version ${currentVersion}`); // eslint-disable-line no-console
   if (currentVersion === 1) {
     // version 1 did not have a schemaVersions table, let's create it

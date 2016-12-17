@@ -20,7 +20,7 @@ const postOnSlack = json => request({
 });
 
 const postOnSlackMultipleChannels =
-  (json, channels) => channels.map(c => postOnSlack({ channel: c, ...json }));
+  (json, channels) => Promise.all(channels.map(c => postOnSlack({ channel: c, ...json })));
 
 async function newPledge({ text, requester }) {
   const [, performer, content, humanReadableDeadline] = /(@[a-zA-Z0-9]+) (.+) by (.+)/.exec(text.trim()) || [];
@@ -112,6 +112,6 @@ async function findNewNotifications() {
   });
 }
 
-setInterval(findNewNotifications, 5 * 1000);
+setInterval(findNewNotifications, 60 * 1000);
 
 app.listen(3000, db.init);
