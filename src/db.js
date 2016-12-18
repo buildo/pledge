@@ -2,7 +2,7 @@ import db from 'sqlite';
 import config from '../config.json';
 import { formatDate } from './utils';
 
-const schemaVersion = 2;
+const schemaVersion = 3;
 
 const createTables = async () => {
   await db.run(`
