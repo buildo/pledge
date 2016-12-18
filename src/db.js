@@ -73,13 +73,13 @@ export const getList = async requester => {
   const requests = (await db.all(`
     SELECT id, requester, performer, content, deadline
     FROM pledges
-    WHERE requester = ?
+    WHERE requester = ? AND completed = 0
   `, requester)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
 
   const pledges = (await db.all(`
     SELECT id, requester, performer, content, deadline
     FROM pledges
-    WHERE performer = ?
+    WHERE performer = ? AND completed = 0
   `, requester)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
 
   return { requests, pledges };
