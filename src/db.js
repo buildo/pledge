@@ -2,9 +2,11 @@ import db from 'sqlite';
 import config from '../config.json';
 import { formatDate } from './utils';
 
-const createTables = () => {
-  return db.run(`
-    CREATE TABLE if not exists pledges (
+const schemaVersion = 2;
+
+const createTables = async () => {
+  await db.run(`
+    CREATE TABLE pledges (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       requester TEXT NOT NULL,
       performer TEXT NOT NULL,
@@ -12,8 +14,15 @@ const createTables = () => {
       deadline INTEGER NOT NULL,
       expiredNotificationSent BOOLEAN NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL
-    );`
-  );
+    );
+  `);
+  await db.run(`
+    CREATE TABLE schemaVersions (
+      version INTEGER NOT NULL,
+      migrationDate INTEGER NOT NULL
+    );
+  `);
+  await db.run(`INSERT INTO schemaVersions values (?, ?)`, schemaVersion, Date.now());
 };
 
 const migrateIfNeeded = async () => {
@@ -22,8 +31,8 @@ const migrateIfNeeded = async () => {
   `));
   const currentVersion = hasSchemaVersionsTable ?
     (await db.get(`SELECT max(version) as v FROM schemaVersions`)).v : 1;
-  console.log(`starting pledge version ${currentVersion}`); // eslint-disable-line no-console
-  if (currentVersion === 1) {
+  console.log(`starting pledge, current DB version is ${currentVersion}`); // eslint-disable-line no-console
+  if (currentVersion < 2) {
     // version 1 did not have a schemaVersions table, let's create it
     await db.run(`
       CREATE TABLE if not exists schemaVersions (
@@ -107,6 +116,13 @@ export const deletePledge = pledgeId => {
 
 export const init = async () => {
   await db.open(config.db);
-  await createTables();
-  await migrateIfNeeded();
+  const hasPledgesTable = !!(await db.get(`
+    SELECT 1 FROM sqlite_master WHERE name ='pledges' and type='table';
+  `));
+  if (hasPledgesTable) {
+    await migrateIfNeeded();
+  } else {
+    console.log("creating tables...");
+    createTables();
+  }
 };
