@@ -52,7 +52,7 @@ async function newPledge({ text, requester }) {
 async function getPledgesList(requester) {
   const { requests, pledges } = await db.getList(requester);
 
-  const baseURL = "https://pledge.our.buildo.io";
+  const baseURL = 'https://pledge.our.buildo.io';
 
   const myPledges = `*My pledges:*\n${pledges.map(p => `\n • ${p.content} _for ${p.requester}_ *by ${p.deadline}* <${baseURL}/deletePledge/${p.id}|delete> <${baseURL}/completePledge/${p.id}|complete>`)}`;
   const myRequests = `*My requests:*\n${requests.map(p => `\n • _${p.performer}_ pledged to ${p.content} *by ${p.deadline}* <${baseURL}/deletePledge/${p.id}|delete> <${baseURL}/completePledge/${p.id}|complete>`)}`;
