@@ -60,6 +60,19 @@ async function getPledgesList(requester) {
   return `${myPledges}\n\n${myRequests}`;
 }
 
+async function findNewNotifications() {
+  // notify for pledges that have expired
+  const expiredPledges = await db.findAllPledgesExpiredToNotify();
+  expiredPledges.map(async p => {
+    await postOnSlackMultipleChannels({
+      text: `pledge ${p.content} expired just now`
+    }, [p.requester, p.performer]);
+    await db.setExpiredNotificationAsSentOnPledge(p.id);
+  });
+}
+
+setInterval(findNewNotifications, 60 * 1000);
+
 // EXPRESS SERVER
 
 const app = express();
@@ -122,18 +135,5 @@ app.get('/completePledge/:pledgeId', async ({ params: { pledgeId } }, res) => {
     res.send(`Error: ${e.message}`);
   }
 });
-
-async function findNewNotifications() {
-  // notify for pledges that have expired
-  const expiredPledges = await db.findAllPledgesExpiredToNotify();
-  expiredPledges.map(async p => {
-    await postOnSlackMultipleChannels({
-      text: `pledge ${p.content} expired just now`
-    }, [p.requester, p.performer]);
-    await db.setExpiredNotificationAsSentOnPledge(p.id);
-  });
-}
-
-setInterval(findNewNotifications, 60 * 1000);
 
 app.listen(3000, db.init);
