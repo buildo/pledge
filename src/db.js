@@ -22,7 +22,7 @@ const createTables = async () => {
       migrationDate INTEGER NOT NULL
     );
   `);
-  await db.run(`INSERT INTO schemaVersions values (?, ?)`, schemaVersion, Date.now());
+  await db.run('INSERT INTO schemaVersions values (?, ?)', schemaVersion, Date.now());
 };
 
 const migrateIfNeeded = async () => {
@@ -30,7 +30,7 @@ const migrateIfNeeded = async () => {
     SELECT 1 FROM sqlite_master WHERE name ='schemaVersions' and type='table';
   `));
   const currentVersion = hasSchemaVersionsTable ?
-    (await db.get(`SELECT max(version) as v FROM schemaVersions`)).v : 1;
+    (await db.get('SELECT max(version) as v FROM schemaVersions')).v : 1;
   console.log(`starting pledge, current DB version is ${currentVersion}`); // eslint-disable-line no-console
   if (currentVersion < 2) {
     // version 1 did not have a schemaVersions table, let's create it
@@ -122,7 +122,7 @@ export const init = async () => {
   if (hasPledgesTable) {
     await migrateIfNeeded();
   } else {
-    console.log("creating tables...");
+    console.log('creating tables'); // eslint-disable-line no-console
     createTables();
   }
 };
