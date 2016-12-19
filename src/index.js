@@ -52,11 +52,26 @@ async function newPledge({ text, requester }) {
 async function getPledgesList(requester) {
   const { requests, pledges } = await db.getList(requester);
 
-  const myPledges = `*My pledges:*\n${pledges.map(p => `\n • ${p.content} _for ${p.requester}_ *by ${p.deadline}* <https://pledge.our.buildo.io/deletePledge/${p.id}|delete>`)}`;
-  const myRequests = `*My requests:*\n${requests.map(p => `\n • _${p.performer}_ pledged to ${p.content} *by ${p.deadline}* <https://pledge.our.buildo.io/deletePledge/${p.id}|delete>`)}`;
+  const baseURL = 'https://pledge.our.buildo.io';
+
+  const myPledges = `*My pledges:*\n${pledges.map(p => `\n • ${p.content} _for ${p.requester}_ *by ${p.deadline}* <${baseURL}/deletePledge/${p.id}|delete> <${baseURL}/completePledge/${p.id}|complete>`)}`;
+  const myRequests = `*My requests:*\n${requests.map(p => `\n • _${p.performer}_ pledged to ${p.content} *by ${p.deadline}* <${baseURL}/deletePledge/${p.id}|delete> <${baseURL}/completePledge/${p.id}|complete>`)}`;
 
   return `${myPledges}\n\n${myRequests}`;
 }
+
+async function findNewNotifications() {
+  // notify for pledges that have expired
+  const expiredPledges = await db.findAllPledgesExpiredToNotify();
+  expiredPledges.map(async p => {
+    await postOnSlackMultipleChannels({
+      text: `pledge ${p.content} expired just now`
+    }, [p.requester, p.performer]);
+    await db.setExpiredNotificationAsSentOnPledge(p.id);
+  });
+}
+
+setInterval(findNewNotifications, 60 * 1000);
 
 // EXPRESS SERVER
 
@@ -101,17 +116,24 @@ app.get('/deletePledge/:pledgeId', async ({ params: { pledgeId } }, res) => {
   }
 });
 
-async function findNewNotifications() {
-  // notify for pledges that have expired
-  const expiredPledges = await db.findAllPledgesExpiredToNotify();
-  expiredPledges.map(async p => {
-    await postOnSlackMultipleChannels({
-      text: `pledge ${p.content} expired just now`
-    }, [p.requester, p.performer]);
-    await db.setExpiredNotificationAsSentOnPledge(p.id);
-  });
-}
-
-setInterval(findNewNotifications, 60 * 1000);
+app.get('/completePledge/:pledgeId', async ({ params: { pledgeId } }, res) => {
+  try {
+    const { requester, performer, content } = await db.getPledge(pledgeId);
+    await db.completePledge(pledgeId);
+    // notify on slack
+    const notificationMessage = `pledge "${content}" has been completed !!!`;
+    await postOnSlack({
+      text: notificationMessage,
+      channel: performer
+    });
+    await postOnSlack({
+      text: notificationMessage,
+      channel: requester
+    });
+    res.send(`Successfully completed pledge #${pledgeId}`);
+  } catch (e) {
+    res.send(`Error: ${e.message}`);
+  }
+});
 
 app.listen(3000, db.init);

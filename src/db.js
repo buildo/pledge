@@ -2,7 +2,7 @@ import db from 'sqlite';
 import config from '../config.json';
 import { formatDate } from './utils';
 
-const schemaVersion = 2;
+const schemaVersion = 3;
 
 const createTables = async () => {
   await db.run(`
@@ -12,6 +12,7 @@ const createTables = async () => {
       performer TEXT NOT NULL,
       content TEXT NOT NULL,
       deadline INTEGER NOT NULL,
+      completed BOOLEAN NOT NULL DEFAULT 0,
       expiredNotificationSent BOOLEAN NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL
     );
@@ -52,19 +53,33 @@ const migrateIfNeeded = async () => {
     );
     console.log('migrated DB to version 2'); // eslint-disable-line no-console
   }
+
+  if (currentVersion < 3) {
+    // add version line with migrationDate = now
+    await db.run(`
+      INSERT INTO schemaVersions values (3, ?)
+    `, Date.now()
+    );
+    // perform migration v2 => v3
+    await db.run(`
+      ALTER TABLE pledges
+      ADD COLUMN completed BOOLEAN NOT NULL DEFAULT 0`
+    );
+    console.log('migrated DB to version 3');
+  }
 };
 
 export const getList = async requester => {
   const requests = (await db.all(`
     SELECT id, requester, performer, content, deadline
     FROM pledges
-    WHERE requester = ?
+    WHERE requester = ? AND completed = 0
   `, requester)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
 
   const pledges = (await db.all(`
     SELECT id, requester, performer, content, deadline
     FROM pledges
-    WHERE performer = ?
+    WHERE performer = ? AND completed = 0
   `, requester)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
 
   return { requests, pledges };
@@ -108,6 +123,15 @@ export const setExpiredNotificationAsSentOnPledge = pledgeId => {
 export const deletePledge = pledgeId => {
   return db.run(`
     DELETE FROM pledges
+    WHERE id = ?
+  `, pledgeId
+  );
+};
+
+export const completePledge = pledgeId => {
+  return db.run(`
+    UPDATE pledges
+    SET completed = 1
     WHERE id = ?
   `, pledgeId
   );
