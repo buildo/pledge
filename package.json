@@ -4,8 +4,8 @@
   "description": "pledge is a slack bot that helps your team keep commitments",
   "main": "lib/index.js",
   "engineStrict": true,
-  "engines" : {
-    "node" : ">=6"
+  "engines": {
+    "node": ">=6"
   },
   "scripts": {
     "lint": "eslint src",
@@ -28,8 +28,8 @@
   "homepage": "https://github.com/buildo/pledge#readme",
   "dependencies": {
     "babel-core": "^6.4.5",
-    "babel-runtime": "^6.9.2",
     "babel-polyfill": "^6.4.5",
+    "babel-runtime": "^6.9.2",
     "body-parser": "^1.15.0",
     "date.js": "^0.3.1",
     "debug": "^2.2.0",
