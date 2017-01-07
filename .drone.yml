@@ -6,12 +6,10 @@ build:
       - NPM_CONFIG_LOGLEVEL=warn
     commands:
       - cp config-ci.json config.json
-      - npm install
-
-  lint:
-    image: node:6
-    commands:
-      - npm run lint
+      - npm install -g yarn
+      - yarn
+      - yarn test
+      - yarn run lint
 
 publish:
   docker:
