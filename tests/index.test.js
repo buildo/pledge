@@ -2,6 +2,10 @@ import request from 'supertest';
 import app from '../src/app.js';
 import * as db from '../src/db';
 
+jest.mock('../src/slack');
+import * as slack from '../src/slack';
+slack.postOnSlack.mockImplementation(() => {return Promise.resolve();});
+
 describe('app', () => {
 
   describe('slackCommand', () => {
@@ -34,6 +38,24 @@ describe('app', () => {
           expect(res.text).not.toMatch('pledged to');
         });
     });
+
+    it.only('notifies both requester and performer when a pledge is created', () => {
+      return request(app).post('/slackCommand')
+        .send('user_name=requester')
+        .send('text=@performer pledge content by tomorrow')
+        .expect(200)
+        .then((res) => {
+          expect(typeof res.text).toBe('string');
+          // notification for requester sent as response to slack command
+          expect(res.text).toMatch('You asked @performer to \"pledge content\" by tomorrow');
+          // notification for performer
+          expect(slack.postOnSlack.mock.calls[0][0].text)
+            .toMatch('@requester asked you to \"pledge content\" by tomorrow');
+          expect(slack.postOnSlack.mock.calls[0][0].channel)
+            .toMatch('@performer');
+        });
+    });
+
 
   });
 
