@@ -142,7 +142,11 @@ export const clean = async () => {
 };
 
 export const init = async () => {
-  await db.open(config.db);
+  try {
+    await db.open(config.db);
+  } catch (e) {
+    await new db.Database(config.db);
+  }
   const hasPledgesTable = !!(await db.get(`
     SELECT 1 FROM sqlite_master WHERE name ='pledges' and type='table';
   `));
