@@ -6,4 +6,4 @@ import router from './routes';
 const app = express();
 app.use('/', router);
 
-module.exports = app;
+export default app;
