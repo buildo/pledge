@@ -137,6 +137,9 @@ export const completePledge = pledgeId => {
   );
 };
 
+export const clean = async () => {
+  return db.run('DELETE FROM pledges');
+};
 
 export const init = async () => {
   await db.open(config.db);
