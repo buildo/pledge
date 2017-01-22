@@ -1,26 +1,14 @@
 import 'babel-core/register';
 import 'babel-polyfill';
 import express from 'express';
-import request from 'request-promise';
 import bodyParser from 'body-parser';
 import _debug from 'debug';
 import human2date from 'date.js';
-import config from '../config.json';
 import { formatDate } from './utils';
 import * as db from './db';
-
-const INCOMING_WEBHOOK_URL = config.slack.incomingWebhookURL;
+import * as slack from './slack';
 
 const debug = _debug('pledge');
-
-const postOnSlack = json => request({
-  json: { username: 'pledge', icon_emoji: ':dog:', ...json },
-  url: INCOMING_WEBHOOK_URL,
-  method: 'POST'
-});
-
-const postOnSlackMultipleChannels =
-  (json, channels) => Promise.all(channels.map(c => postOnSlack({ channel: c, ...json })));
 
 async function newPledge({ text, requester }) {
   const [, performer, content, humanReadableDeadline] = /(@[a-zA-Z0-9]+) (.+) by (.+)/.exec(text.trim()) || [];
@@ -41,7 +29,7 @@ async function newPledge({ text, requester }) {
 
   await db.insertPledge({ requester, performer, content, deadline }).then(debug);
 
-  await postOnSlack({
+  await slack.postOnSlack({
     text: `${requester} asked you to "${content}" by ${humanReadableDeadline} (${formatDate(deadline)})`,
     channel: performer
   });
@@ -64,7 +52,7 @@ async function findNewNotifications() {
   // notify for pledges that have expired
   const expiredPledges = await db.findAllPledgesExpiredToNotify();
   expiredPledges.map(async p => {
-    await postOnSlackMultipleChannels({
+    await slack.postOnSlackMultipleChannels({
       text: `pledge ${p.content} expired just now`
     }, [p.requester, p.performer]);
     await db.setExpiredNotificationAsSentOnPledge(p.id);
@@ -106,11 +94,11 @@ router.get('/deletePledge/:pledgeId', async ({ params: { pledgeId } }, res) => {
     await db.deletePledge(pledgeId);
     // notify on slack
     const notificationMessage = `pledge "${content}" has been deleted`;
-    await postOnSlack({
+    await slack.postOnSlack({
       text: notificationMessage,
       channel: performer
     });
-    await postOnSlack({
+    await slack.postOnSlack({
       text: notificationMessage,
       channel: requester
     });
@@ -126,11 +114,11 @@ router.get('/completePledge/:pledgeId', async ({ params: { pledgeId } }, res) =>
     await db.completePledge(pledgeId);
     // notify on slack
     const notificationMessage = `pledge "${content}" has been completed !!!`;
-    await postOnSlack({
+    await slack.postOnSlack({
       text: notificationMessage,
       channel: performer
     });
-    await postOnSlack({
+    await slack.postOnSlack({
       text: notificationMessage,
       channel: requester
     });
