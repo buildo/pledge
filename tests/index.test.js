@@ -39,7 +39,7 @@ describe('app', () => {
         });
     });
 
-    it.only('notifies both requester and performer when a pledge is created', () => {
+    it('notifies both requester and performer when a pledge is created', () => {
       return request(app).post('/slackCommand')
         .send('user_name=requester')
         .send('text=@performer pledge content by tomorrow')
