@@ -10,6 +10,7 @@ build:
       - yarn
       - yarn test
       - yarn run lint
+      - cp config-prod.json config.json
 
 publish:
   docker:
