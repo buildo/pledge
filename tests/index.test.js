@@ -4,7 +4,7 @@ import * as db from '../src/db';
 
 jest.mock('../src/slack');
 import * as slack from '../src/slack';
-slack.postOnSlack.mockImplementation(() => {return Promise.resolve();});
+slack.postOnSlack.mockImplementation(() => Promise.resolve());
 
 describe('app', () => {
 
