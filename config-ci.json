@@ -1,5 +1,5 @@
 {
-  "db": "/var/lib/pledge/db-test",
+  "db": "db-test",
   "domain": "pledge.our.buildo.io",
   "interval": 1,
   "slack": {
