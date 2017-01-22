@@ -37,7 +37,8 @@
     "lodash": "^4.11.1",
     "request": "^2.75.0",
     "request-promise": "^2.0.1",
-    "sqlite": "^2.0.2"
+    "sqlite": "^2.0.2",
+    "supertest": "^2.0.1"
   },
   "devDependencies": {
     "babel-cli": "^6.4.5",
