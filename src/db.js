@@ -65,7 +65,7 @@ const migrateIfNeeded = async () => {
       ALTER TABLE pledges
       ADD COLUMN completed BOOLEAN NOT NULL DEFAULT 0`
     );
-    console.log('migrated DB to version 3');
+    console.log('migrated DB to version 3'); // eslint-disable-line no-console
   }
 };
 
