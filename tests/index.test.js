@@ -1,6 +1,7 @@
 import request from 'supertest';
 import app from '../src/app.js';
 import * as db from '../src/db';
+import del from 'del';
 
 jest.mock('../src/slack');
 import * as slack from '../src/slack';
@@ -11,8 +12,15 @@ describe('app', () => {
   describe('slackCommand', () => {
 
     beforeEach(async () => {
-      await db.init();
-      await db.clean();
+      await db.init(`db-${Math.random().toString(36).substr(2, 20)}`);
+    });
+
+    afterEach(async () => {
+      await db.close();
+    });
+
+    afterAll(async () => {
+      await del('db-*');
     });
 
     it('returns an error if Slack POST format is not respected', () => {

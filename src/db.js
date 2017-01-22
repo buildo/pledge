@@ -137,15 +137,11 @@ export const completePledge = pledgeId => {
   );
 };
 
-export const clean = async () => {
-  return db.run('DELETE FROM pledges');
-};
-
-export const init = async () => {
+export const init = async (dbFilename = config.db) => {
   try {
-    await db.open(config.db);
+    await db.open(dbFilename);
   } catch (e) {
-    await new db.Database(config.db);
+    await new db.Database(dbFilename);
   }
   const hasPledgesTable = !!(await db.get(`
     SELECT 1 FROM sqlite_master WHERE name ='pledges' and type='table';
@@ -156,4 +152,8 @@ export const init = async () => {
     console.log('creating tables'); // eslint-disable-line no-console
     createTables();
   }
+};
+
+export const close = async () => {
+  await db.close();
 };
