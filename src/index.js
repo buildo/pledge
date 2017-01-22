@@ -1,5 +1,3 @@
-import 'babel-core/register';
-import 'babel-polyfill';
 import app from './app';
 import * as db from './db';
 
