@@ -1,5 +1,3 @@
-import 'babel-core/register';
-import 'babel-polyfill';
 import express from 'express';
 import bodyParser from 'body-parser';
 import _debug from 'debug';
