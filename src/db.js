@@ -65,7 +65,7 @@ const migrateIfNeeded = async () => {
       ALTER TABLE pledges
       ADD COLUMN completed BOOLEAN NOT NULL DEFAULT 0`
     );
-    console.log('migrated DB to version 3');
+    console.log('migrated DB to version 3'); // eslint-disable-line no-console
   }
 };
 
@@ -137,9 +137,12 @@ export const completePledge = pledgeId => {
   );
 };
 
-
-export const init = async () => {
-  await db.open(config.db);
+export const init = async (dbFilename = config.db) => {
+  try {
+    await db.open(dbFilename);
+  } catch (e) {
+    await new db.Database(dbFilename);
+  }
   const hasPledgesTable = !!(await db.get(`
     SELECT 1 FROM sqlite_master WHERE name ='pledges' and type='table';
   `));
@@ -149,4 +152,8 @@ export const init = async () => {
     console.log('creating tables'); // eslint-disable-line no-console
     createTables();
   }
+};
+
+export const close = async () => {
+  await db.close();
 };
