@@ -36,6 +36,7 @@
     "del": "^2.2.2",
     "express": "^4.13.4",
     "lodash": "^4.11.1",
+    "mockdate": "^2.0.1",
     "request": "^2.75.0",
     "request-promise": "^2.0.1",
     "sqlite": "^2.0.2",

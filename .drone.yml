@@ -5,6 +5,8 @@ build:
       - NPM_CONFIG_CACHE=/drone/.npm
       - NPM_CONFIG_LOGLEVEL=warn
     commands:
+      - export TZ="Europe/Rome"
+      - ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
       - cp config-ci.json config.json
       - npm install -g yarn
       - yarn

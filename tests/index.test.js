@@ -2,10 +2,13 @@ import request from 'supertest';
 import app from '../src/app.js';
 import * as db from '../src/db';
 import del from 'del';
+import MockDate from 'mockdate';
+import { findNewNotifications } from '../src/routes';
 
 jest.mock('../src/slack');
 import * as slack from '../src/slack';
 slack.postOnSlack.mockImplementation(() => Promise.resolve());
+slack.postOnSlackMultipleChannels.mockImplementation(() => Promise.resolve());
 
 describe('app', () => {
 
@@ -64,6 +67,29 @@ describe('app', () => {
         });
     });
 
+    it('notifies both requester and performer when a pledge has expired', () => {
+      MockDate.set(0, 0);
+      return request(app).post('/slackCommand')
+        .send('user_name=requester')
+        .send('text=@performer pledge content by today at 10am')
+        .expect(200)
+        .then(async () => {
+          const nExp = () =>
+            slack.postOnSlackMultipleChannels.mock.calls.filter((c) => c[0].text.match(/expired/)).length;
+          // just before, no notifications
+          MockDate.set(32400000 + 0);
+          await findNewNotifications();
+          expect(nExp()).toBe(0);
+          // right after, it notifies
+          MockDate.set(32400000 + 1);
+          await findNewNotifications();
+          expect(nExp()).toBe(1);
+          // after some time, does not notify twice
+          MockDate.set(32400000 + 999);
+          await findNewNotifications();
+          expect(nExp()).toBe(1);
+        });
+    });
 
   });
 
