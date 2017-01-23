@@ -67,7 +67,7 @@ describe('app', () => {
         });
     });
 
-    fit('notifies both requester and performer when a pledge has expired', () => {
+    it('notifies both requester and performer when a pledge has expired', () => {
       MockDate.set(0, 0);
       return request(app).post('/slackCommand')
         .send('user_name=requester')
