@@ -46,7 +46,7 @@ async function getPledgesList(requester) {
   return `${myPledges}\n\n${myRequests}`;
 }
 
-async function findNewNotifications() {
+export async function findNewNotifications() {
   // notify for pledges that have expired
   const expiredPledges = await db.findAllPledgesExpiredToNotify();
   expiredPledges.map(async p => {
