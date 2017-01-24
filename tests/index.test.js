@@ -77,7 +77,7 @@ describe('app', () => {
           const nExp = () =>
             slack.postOnSlackMultipleChannels.mock.calls.filter((c) => c[0].text.match(/expired/)).length;
           // just before, no notifications
-          MockDate.set(32400000 + 0);
+          MockDate.set(32400000 - 1);
           await findNewNotifications();
           expect(nExp()).toBe(0);
           // right after, it notifies
