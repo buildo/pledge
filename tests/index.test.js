@@ -68,7 +68,10 @@ describe('app', () => {
     });
 
     it('notifies both requester and performer when a pledge has expired', () => {
-      MockDate.set(0, 0);
+      const timezoneOffset = new Date().getTimezoneOffset();
+      const interval = 10 * 60 * 60 * 1000; // 10 hours
+      const adjInterval = interval + timezoneOffset * 60 * 1000;
+      MockDate.set(0);
       return request(app).post('/slackCommand')
         .send('user_name=requester')
         .send('text=@performer pledge content by today at 10am')
@@ -77,15 +80,15 @@ describe('app', () => {
           const nExp = () =>
             slack.postOnSlackMultipleChannels.mock.calls.filter((c) => c[0].text.match(/expired/)).length;
           // just before, no notifications
-          MockDate.set(32400000 - 1);
+          MockDate.set(adjInterval - 1);
           await findNewNotifications();
           expect(nExp()).toBe(0);
           // right after, it notifies
-          MockDate.set(32400000 + 1);
+          MockDate.set(adjInterval + 1);
           await findNewNotifications();
           expect(nExp()).toBe(1);
           // after some time, does not notify twice
-          MockDate.set(32400000 + 999);
+          MockDate.set(adjInterval + 999);
           await findNewNotifications();
           expect(nExp()).toBe(1);
         });
