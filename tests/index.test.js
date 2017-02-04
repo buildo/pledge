@@ -10,6 +10,20 @@ import * as slack from '../src/slack';
 slack.postOnSlack.mockImplementation(() => Promise.resolve());
 slack.postOnSlackMultipleChannels.mockImplementation(() => Promise.resolve());
 
+const getList = () => {
+  return request(app).post('/slackCommand')
+    .send('user_name=requester')
+    .send('text=list')
+    .expect(200);
+};
+
+const createPledge = (by) => {
+  return request(app).post('/slackCommand')
+    .send('user_name=requester')
+    .send(`text=@performer content by ${by}`)
+    .expect(200);
+};
+
 describe('app', () => {
 
   describe('slackCommand', () => {
@@ -166,6 +180,30 @@ describe('app', () => {
             expect(nExp()).toBe(0);
           });
         });
+    });
+
+    it('delete: notifies both immediately, disappears from list', () => {
+      MockDate.set(0);
+      // create a pledge
+      return createPledge('tomorrow at 10am').then(() => {
+        return getList().then((res) => {
+          // pledge is present in list
+          expect(res.text).toMatch('_@performer_ pledged to content *by 2 January at 10:00*');
+          // delete the pledge
+          return request(app).get('/deletePledge/1').expect(200).then((res) => {
+            expect(res.text).toEqual('Successfully deleted pledge #1');
+            // notifications are sent
+            expect(slack.postOnSlackMultipleChannels.mock.calls[0]).toEqual([
+              { text: 'pledge "content" has been deleted' },
+              ['@requester', '@performer']
+            ]);
+            return getList().then((res) => {
+              // pledge is not in list any more
+              expect(res.text).not.toMatch('_@performer_ pledged to content *by 2 January at 10:00*');
+            });
+          });
+        });
+      });
     });
 
   });

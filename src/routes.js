@@ -92,14 +92,9 @@ router.get('/deletePledge/:pledgeId', async ({ params: { pledgeId } }, res) => {
     await db.deletePledge(pledgeId);
     // notify on slack
     const notificationMessage = `pledge "${content}" has been deleted`;
-    await slack.postOnSlack({
-      text: notificationMessage,
-      channel: performer
-    });
-    await slack.postOnSlack({
-      text: notificationMessage,
-      channel: requester
-    });
+    await slack.postOnSlackMultipleChannels({
+      text: notificationMessage
+    }, [requester, performer]);
     return res.send(`Successfully deleted pledge #${pledgeId}`);
   } catch (e) {
     return res.send(`Error: ${e.message}`);
