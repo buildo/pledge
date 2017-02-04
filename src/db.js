@@ -106,7 +106,7 @@ export const findAllPledgesExpiredToNotify = () => {
   return db.all(`
     SELECT id, requester, performer, content, deadline
     FROM pledges
-    WHERE deadline < ? AND expiredNotificationSent = 0
+    WHERE deadline < ? AND expiredNotificationSent = 0 AND completed = 0
   `, Date.now()
   );
 };

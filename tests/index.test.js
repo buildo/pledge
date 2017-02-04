@@ -15,6 +15,8 @@ describe('app', () => {
   describe('slackCommand', () => {
 
     beforeEach(async () => {
+      slack.postOnSlackMultipleChannels.mockClear();
+      slack.postOnSlack.mockClear();
       await db.init(`db-${Math.random().toString(36).substr(2, 20)}`);
     });
 
@@ -118,6 +120,29 @@ describe('app', () => {
         });
     });
 
-  });
+    it('expired: does not notify for completed pledges', () => {
+      const timezoneOffset = new Date().getTimezoneOffset();
+      const interval = 10 * 60 * 60 * 1000; // 10 hours
+      const adjInterval = interval + timezoneOffset * 60 * 1000;
+      MockDate.set(0);
+      return request(app).post('/slackCommand')
+        .send('user_name=requester')
+        .send('text=@performer content by today at 10am')
+        .expect(200)
+        .then(async () => {
+          return request(app).get('/completePledge/1').expect(200).then(async () => {
+            const nExp = () =>
+              slack.postOnSlackMultipleChannels.mock.calls.filter((c) => {
+                return c[0].text.match(/expired/) && c[1].includes('@performer')
+                  && c[1].includes('@requester') && c[1].length === 2;
+              }).length;
+            // after some time, no notification ever arrived
+            MockDate.set(adjInterval + 999);
+            await findNewNotifications();
+            expect(nExp()).toBe(0);
+          });
+        });
+    });
 
+  });
 });
