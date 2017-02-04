@@ -206,5 +206,52 @@ describe('app', () => {
       });
     });
 
+    it('complete: notifies both immediately, disappears from list', () => {
+      MockDate.set(0);
+      // create a pledge
+      return createPledge('tomorrow at 10am').then(() => {
+        return getList().then((res) => {
+          // pledge is present in list
+          expect(res.text).toMatch('_@performer_ pledged to content *by 2 January at 10:00*');
+          // delete the pledge
+          return request(app).get('/completePledge/1').expect(200).then((res) => {
+            expect(res.text).toEqual('Successfully completed pledge #1');
+            // notifications are sent
+            expect(slack.postOnSlackMultipleChannels.mock.calls[0]).toEqual([
+              { text: 'pledge "content" has been completed !!!' },
+              ['@requester', '@performer']
+            ]);
+            return getList().then((res) => {
+              // pledge is not in list any more
+              expect(res.text).not.toMatch('_@performer_ pledged to content *by 2 January at 10:00*');
+            });
+          });
+        });
+      });
+    });
+
+    it('complete: notifies both immediately, even if expired', () => {
+      MockDate.set(0);
+      const timezoneOffset = new Date().getTimezoneOffset();
+      const interval = 10 * 60 * 60 * 1000; // 10 hours
+      const adjInterval = interval + timezoneOffset * 60 * 1000;
+      // create a pledge
+      return createPledge('today at 10am').then(async () => {
+        // let it expire
+        MockDate.set(adjInterval + 999);
+        await findNewNotifications();
+        // complete the pledge
+        return request(app).get('/completePledge/1').expect(200).then((res) => {
+          expect(res.text).toEqual('Successfully completed pledge #1');
+          // notifications are sent
+          expect(slack.postOnSlackMultipleChannels.mock.calls
+            .filter((x) => x[0].text.match('has been completed'))[0]).toEqual([
+              { text: 'pledge "content" has been completed !!!' },
+              ['@requester', '@performer']
+            ]);
+        });
+      });
+    });
+
   });
 });

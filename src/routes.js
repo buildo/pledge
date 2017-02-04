@@ -107,14 +107,9 @@ router.get('/completePledge/:pledgeId', async ({ params: { pledgeId } }, res) =>
     await db.completePledge(pledgeId);
     // notify on slack
     const notificationMessage = `pledge "${content}" has been completed !!!`;
-    await slack.postOnSlack({
-      text: notificationMessage,
-      channel: performer
-    });
-    await slack.postOnSlack({
-      text: notificationMessage,
-      channel: requester
-    });
+    await slack.postOnSlackMultipleChannels({
+      text: notificationMessage
+    }, [requester, performer]);
     return res.send(`Successfully completed pledge #${pledgeId}`);
   } catch (e) {
     return res.send(`Error: ${e.message}`);
