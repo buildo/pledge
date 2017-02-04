@@ -35,7 +35,7 @@ describe('app', () => {
         });
     });
 
-    it('shows an empty list of pledges with the list command', () => {
+    it('list: shows an empty list of pledges with the list command', () => {
       return request(app).post('/slackCommand')
         .send('user_name=luca')
         .send('text=list')
