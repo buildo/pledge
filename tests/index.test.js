@@ -50,20 +50,30 @@ describe('app', () => {
         });
     });
 
-    it('notifies both requester and performer when a pledge is created', () => {
-      return request(app).post('/slackCommand')
+    it('create: notifies both immediately, appears in list', () => {
+      MockDate.set(0);
+      request(app).post('/slackCommand')
         .send('user_name=requester')
-        .send('text=@performer pledge content by tomorrow')
+        .send('text=@performer pledge content by tomorrow at 10am')
         .expect(200)
         .then((res) => {
           expect(typeof res.text).toBe('string');
           // notification for requester sent as response to slack command
-          expect(res.text).toMatch('You asked @performer to \"pledge content\" by tomorrow');
+          expect(res.text).toMatch('You asked @performer to \"pledge content\" by tomorrow at 10am');
           // notification for performer
           expect(slack.postOnSlack.mock.calls[0][0].text)
-            .toMatch('@requester asked you to \"pledge content\" by tomorrow');
+            .toMatch('@requester asked you to \"pledge content\" by tomorrow at 10am');
           expect(slack.postOnSlack.mock.calls[0][0].channel)
             .toMatch('@performer');
+        });
+      request(app).post('/slackCommand')
+        .send('user_name=requester')
+        .send('text=list')
+        .expect(200)
+        .then((res) => {
+          expect(typeof res.text).toBe('string');
+          // pledge is present
+          expect(res.text).toMatch('_@performer_ pledged to pledge content *by 2 January at 10:00*');
         });
     });
 
