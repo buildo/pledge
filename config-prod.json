@@ -1,6 +1,6 @@
 {
   "db": "/var/lib/pledge/db",
-  "domain": "pledge.our.buildo.io",
+  "domain": "https://pledge.our.buildo.io",
   "interval": 1,
   "slack": {
     "clientId": "2194261799.137771655351",
