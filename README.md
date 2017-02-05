@@ -1,7 +1,15 @@
 # pledge
-a slack bot that helps your team keep commitments
 
-# how to use
+A slack bot that helps your team keep commitments
+
+# quick start
+
+## install
+
+- close this repo, then `npm run build`, `npm run start`
+- with your browser, go to `http://my.pledge.deploy.com/add-to-slack` and authorize pledge on your slack team
+
+## how to use
 
 In slack, from any channel, do `/pledge @performer [what] by [when]`. You'll be the requester.
 
@@ -24,3 +32,22 @@ here's an extract from the article linked above.
 4. **Present the deliverable explicitly.**   The performer makes a clear statement saying “Here is what I said I would deliver” or “This is why I could not deliver”.  This is the essence and evidence of accountability.  In our current work norms, this step is frequently “fudged”.  Deliveries that are nearly complete slide in more or less on the day they were hoped for.  It is rare for a performer to make a clear statement that today I am delivering on the agreement we made.
 
 5. **When the requester, always acknowledge and assess the delivery.**  Honesty and truth demand an assessment as to whether the delivery met the original expectations.  Answering the question - were you satisfied? – completes the cycle and assures closure.  This underutilized practice is the minimum quid pro quo to the effort of the performer and serves to represent the customer’s accountability to honor the agreement.  Moreover, these are the “golden moments” when feedback can enhance both future performance and trust.
+
+# notes for developers
+
+## develop locally and test
+
+There's a test slack team called `pledge-test`, ask luca to invite you.
+
+There are 2 slack applications (associated to luca's account in team buildo):
+- **pledge** is the production application, which points to `pledge.our.buildo.io`
+- **pledge-test** is the test application, which points to `pledge-test.ngrok.com`
+
+`pledge-test.ngrok.com` is a tunnel to your local server, to start it:
+
+1. add `clientId` and `clientSecret` to config.json (from [here](https://api.slack.com/apps/A41NPK9AB/general))
+1. install ngrok: `brew cask install ngrok`
+1. login with `ngrok authtoken {TOKEN}` (saved in buildo's password manager)
+1. start the tunnel: `ngrok http -subdomain pledge-test -region eu 3000`
+1. `yarn watch` to compile on changes
+1. `yarn restart` to restart node on changes (uses `nodemon`)
