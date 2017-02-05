@@ -58,12 +58,14 @@ export const getList = async (requester, teamId) => {
     SELECT id, teamId, requester, performer, content, deadline
     FROM pledges
     WHERE requester = ? AND teamId = ? AND completed = 0
+    ORDER BY deadline ASC
   `, requester, teamId)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
 
   const pledges = (await db.all(`
     SELECT id, teamId, requester, performer, content, deadline
     FROM pledges
     WHERE performer = ? AND teamId = ? AND completed = 0
+    ORDER BY deadline ASC
   `, requester, teamId)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
 
   return { requests, pledges };
