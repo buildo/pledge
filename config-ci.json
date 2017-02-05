@@ -1,9 +1,10 @@
 {
   "db": "db-test",
-  "domain": "pledge.our.buildo.io",
+  "domain": "ci.pledge.com.fake",
   "interval": 1,
   "slack": {
-    "incomingWebhookURL": "https://hooks.slack.com/services/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"
+    "clientId": "123456789.123456789",
+    "clientSecret": "abcdef123456789"
   }
 }
 

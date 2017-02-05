@@ -3,7 +3,8 @@
   "domain": "my.deploy.url",
   "interval": 1,
   "slack": {
-    "incomingWebhookURL": "https://url/of/incoming/webhook"
+    "clientId": "123456789.123456789",
+    "clientSecret": "abcdef123456789"
   }
 }
 

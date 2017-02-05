@@ -3,7 +3,8 @@
   "domain": "pledge.our.buildo.io",
   "interval": 1,
   "slack": {
-    "incomingWebhookURL": "https://hooks.slack.com/services/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"
+    "clientId": "2194261799.137771655351",
+    "clientSecret": "37ca4f24926ff3b36f39f6f2f77faaff"
   }
 }
 
