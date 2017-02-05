@@ -36,6 +36,14 @@ export const getTeam = (teamId) => {
   );
 };
 
+export const deleteTeam = (teamId) => {
+  return db.run(`
+    DELETE FROM teams
+    WHERE teamId = ?
+  `, teamId
+  );
+};
+
 export const insertTeam = (teamId, teamName, botUserId, botAccessToken) => {
   return db.run(`
     INSERT INTO teams (teamId, teamName, botUserId, botAccessToken, createdAt)

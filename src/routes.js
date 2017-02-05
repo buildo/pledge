@@ -91,6 +91,7 @@ router.get('/callback', async (req, res) => {
       console.error('Access Token Error', error.message); // eslint-disable-line no-console
       return res.json('Authentication failed');
     }
+    await db.deleteTeam(result.team_id);
     await db.insertTeam(result.team_id, result.team_name, result.bot.bot_user_id,
       result.bot.bot_access_token);
     return res
