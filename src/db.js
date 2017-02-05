@@ -2,12 +2,21 @@ import db from 'sqlite';
 import config from '../config.json';
 import { formatDate } from './utils';
 
-const schemaVersion = 3;
+const schemaVersion = 4;
+
+const teamsTableDDL = `CREATE TABLE teams (
+  teamName TEXT NOT NULL,
+  teamId TEXT NOT NULL,
+  botUserId TEXT NOT NULL,
+  botAccessToken TEXT NOT NULL,
+  createdAt INTEGER NOT NULL
+);`;
 
 const createTables = async () => {
   await db.run(`
     CREATE TABLE pledges (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      teamId TEXT,
       requester TEXT NOT NULL,
       performer TEXT NOT NULL,
       content TEXT NOT NULL,
@@ -17,6 +26,7 @@ const createTables = async () => {
       created_at INTEGER NOT NULL
     );
   `);
+  await db.run(teamsTableDDL);
   await db.run(`
     CREATE TABLE schemaVersions (
       version INTEGER NOT NULL,
@@ -67,44 +77,85 @@ const migrateIfNeeded = async () => {
     );
     console.log('migrated DB to version 3'); // eslint-disable-line no-console
   }
+
+  if (currentVersion < 4) {
+    // add version line with migrationDate = now
+    await db.run(`
+      INSERT INTO schemaVersions values (4, ?)
+    `, Date.now()
+    );
+    // perform migration v3 => v4
+    await db.run(teamsTableDDL);
+    await db.run(`
+      ALTER TABLE pledges
+      ADD COLUMN teamId TEXT`
+    );
+    console.log('migrated DB to version 4'); // eslint-disable-line no-console
+  }
 };
 
-export const getList = async requester => {
+export const getTeam = (teamId) => {
+  return db.get(`
+    SELECT teamId, teamName, botUserId, botAccessToken, createdAt
+    FROM teams
+    WHERE teamId = ?
+  `, teamId
+  );
+};
+
+export const insertTeam = (teamId, teamName, botUserId, botAccessToken) => {
+  return db.run(`
+    INSERT INTO teams (teamId, teamName, botUserId, botAccessToken, createdAt)
+    VALUES (?, ?, ?, ?, ?)
+  `, teamId, teamName, botUserId, botAccessToken, Date.now()
+  );
+};
+
+export const getList = async (requester, teamId) => {
   const requests = (await db.all(`
     SELECT id, requester, performer, content, deadline
     FROM pledges
-    WHERE requester = ? AND completed = 0
-  `, requester)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
+    WHERE requester = ? AND teamId = ? AND completed = 0
+  `, requester, teamId)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
 
   const pledges = (await db.all(`
     SELECT id, requester, performer, content, deadline
     FROM pledges
-    WHERE performer = ? AND completed = 0
-  `, requester)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
+    WHERE performer = ? AND teamId = ? AND completed = 0
+  `, requester, teamId)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
 
   return { requests, pledges };
 };
 
 export const getPledge = (pledgeId) => {
   return db.get(`
-    SELECT id, requester, performer, content, deadline
+    SELECT id, teamId, requester, performer, content, deadline
     FROM pledges
     WHERE id = ?
   `, pledgeId
   );
 };
 
-export const insertPledge = ({ requester, performer, content, deadline }) => {
+export const insertPledge = ({ teamId, requester, performer, content, deadline }) => {
   return db.run(`
-    INSERT INTO pledges (requester, performer, content, deadline, created_at)
-    VALUES (?, ?, ?, ?, ?)
-  `, requester, performer, content, deadline, Date.now()
+    INSERT INTO pledges (teamId, requester, performer, content, deadline, created_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `, teamId, requester, performer, content, deadline, Date.now()
+  );
+};
+
+export const getTeamByBotAccessToken = (botAccessToken) => {
+  return db.get(`
+    SELECT teamId, teamName, botUserId, botAccessToken, createdAt
+    FROM teams
+    WHERE botAccessToken = ?
+  `, botAccessToken
   );
 };
 
 export const findAllPledgesExpiredToNotify = () => {
   return db.all(`
-    SELECT id, requester, performer, content, deadline
+    SELECT id, teamId, requester, performer, content, deadline
     FROM pledges
     WHERE deadline < ? AND expiredNotificationSent = 0 AND completed = 0
   `, Date.now()
