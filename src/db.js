@@ -2,21 +2,11 @@ import db from 'sqlite';
 import config from '../config.json';
 import { formatDate } from './utils';
 
-const schemaVersion = 4;
-
-const teamsTableDDL = `CREATE TABLE teams (
-  teamName TEXT NOT NULL,
-  teamId TEXT NOT NULL,
-  botUserId TEXT NOT NULL,
-  botAccessToken TEXT NOT NULL,
-  createdAt INTEGER NOT NULL
-);`;
-
 const createTables = async () => {
   await db.run(`
     CREATE TABLE pledges (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      teamId TEXT,
+      teamId TEXT NOT NULL,
       requester TEXT NOT NULL,
       performer TEXT NOT NULL,
       content TEXT NOT NULL,
@@ -26,72 +16,15 @@ const createTables = async () => {
       created_at INTEGER NOT NULL
     );
   `);
-  await db.run(teamsTableDDL);
   await db.run(`
-    CREATE TABLE schemaVersions (
-      version INTEGER NOT NULL,
-      migrationDate INTEGER NOT NULL
+    CREATE TABLE teams (
+      teamName TEXT NOT NULL,
+      teamId TEXT NOT NULL,
+      botUserId TEXT NOT NULL,
+      botAccessToken TEXT NOT NULL,
+      createdAt INTEGER NOT NULL
     );
   `);
-  await db.run('INSERT INTO schemaVersions values (?, ?)', schemaVersion, Date.now());
-};
-
-const migrateIfNeeded = async () => {
-  const hasSchemaVersionsTable = !!(await db.get(`
-    SELECT 1 FROM sqlite_master WHERE name ='schemaVersions' and type='table';
-  `));
-  const currentVersion = hasSchemaVersionsTable ?
-    (await db.get('SELECT max(version) as v FROM schemaVersions')).v : 1;
-  console.log(`starting pledge, current DB version is ${currentVersion}`); // eslint-disable-line no-console
-  if (currentVersion < 2) {
-    // version 1 did not have a schemaVersions table, let's create it
-    await db.run(`
-      CREATE TABLE if not exists schemaVersions (
-        version INTEGER NOT NULL,
-        migrationDate INTEGER NOT NULL
-      );`
-    );
-    // add first version line with migrationDate = now
-    await db.run(`
-      INSERT INTO schemaVersions values (2, ?)
-    `, Date.now()
-    );
-    // perform migration v1 => v2
-    await db.run(`
-      ALTER TABLE pledges
-      ADD COLUMN expiredNotificationSent BOOLEAN NOT NULL DEFAULT 0`
-    );
-    console.log('migrated DB to version 2'); // eslint-disable-line no-console
-  }
-
-  if (currentVersion < 3) {
-    // add version line with migrationDate = now
-    await db.run(`
-      INSERT INTO schemaVersions values (3, ?)
-    `, Date.now()
-    );
-    // perform migration v2 => v3
-    await db.run(`
-      ALTER TABLE pledges
-      ADD COLUMN completed BOOLEAN NOT NULL DEFAULT 0`
-    );
-    console.log('migrated DB to version 3'); // eslint-disable-line no-console
-  }
-
-  if (currentVersion < 4) {
-    // add version line with migrationDate = now
-    await db.run(`
-      INSERT INTO schemaVersions values (4, ?)
-    `, Date.now()
-    );
-    // perform migration v3 => v4
-    await db.run(teamsTableDDL);
-    await db.run(`
-      ALTER TABLE pledges
-      ADD COLUMN teamId TEXT`
-    );
-    console.log('migrated DB to version 4'); // eslint-disable-line no-console
-  }
 };
 
 export const getTeam = (teamId) => {
@@ -197,10 +130,7 @@ export const init = async (dbFilename = config.db) => {
   const hasPledgesTable = !!(await db.get(`
     SELECT 1 FROM sqlite_master WHERE name ='pledges' and type='table';
   `));
-  if (hasPledgesTable) {
-    await migrateIfNeeded();
-  } else {
-    console.log('creating tables'); // eslint-disable-line no-console
+  if (!hasPledgesTable) {
     createTables();
   }
 };
