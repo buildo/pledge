@@ -24,8 +24,8 @@ const credentials = {
 const oauth2 = require('simple-oauth2').create(credentials);
 
 async function newPledge({ text, requester }, botAccessToken) {
-  const [, performer, content, humanReadableDeadline] = /(@[a-zA-Z0-9]+) (.+) by (.+)/.exec(text.trim()) || [];
-
+  const [, , performerId, _performer, content, humanReadableDeadline] = /(\<@([a-zA-Z0-9]+)\|([a-zA-Z0-9]+)\>) (.+) by (.+)/.exec(text.trim()) || [];
+  const performer = `@${_performer}`;
   if (!performer) {
     throw new Error('"Username" is missing. (@username [what] by [when])');
   } else if (!content) {
@@ -40,11 +40,12 @@ async function newPledge({ text, requester }, botAccessToken) {
     throw new Error('"When" should be in the future');
   }
   const teamId = (await db.getTeamByBotAccessToken(botAccessToken)).teamId;
-  await db.insertPledge({ teamId, requester, performer, content, deadline }).then(debug);
+  await db.insertPledge({ teamId, requester, performer, performerId, content, deadline }).then(debug);
 
   await slack.postOnSlack({
     text: `${requester} asked you to "${content}" by ${humanReadableDeadline} (${formatDate(deadline)})`,
-    channel: performer
+    channel: performerId
+
   }, botAccessToken);
 
   return `You asked ${performer} to "${content}" by ${humanReadableDeadline} (${formatDate(deadline)})`;

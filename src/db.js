@@ -9,6 +9,7 @@ const createTables = async () => {
       teamId TEXT NOT NULL,
       requester TEXT NOT NULL,
       performer TEXT NOT NULL,
+      performerId TEXT NOT NULL,
       content TEXT NOT NULL,
       deadline INTEGER NOT NULL,
       completed BOOLEAN NOT NULL DEFAULT 0,
@@ -70,18 +71,18 @@ export const getList = async (requester, teamId) => {
 
 export const getPledge = (pledgeId) => {
   return db.get(`
-    SELECT id, teamId, requester, performer, content, deadline
+    SELECT id, teamId, requester, performer, performerId, content, deadline
     FROM pledges
     WHERE id = ?
   `, pledgeId
   );
 };
 
-export const insertPledge = ({ teamId, requester, performer, content, deadline }) => {
+export const insertPledge = ({ teamId, requester, performer, performerId, content, deadline }) => {
   return db.run(`
-    INSERT INTO pledges (teamId, requester, performer, content, deadline, created_at)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `, teamId, requester, performer, content, deadline, Date.now()
+    INSERT INTO pledges (teamId, requester, performer, performerId, content, deadline, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `, teamId, requester, performer, performerId, content, deadline, Date.now()
   );
 };
 
@@ -96,7 +97,7 @@ export const getTeamByBotAccessToken = (botAccessToken) => {
 
 export const findAllPledgesExpiredToNotify = () => {
   return db.all(`
-    SELECT id, teamId, requester, performer, content, deadline
+    SELECT id, teamId, requester, performer, performerId, content, deadline
     FROM pledges
     WHERE deadline < ? AND expiredNotificationSent = 0 AND completed = 0
   `, Date.now()
