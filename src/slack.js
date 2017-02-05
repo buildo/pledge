@@ -1,13 +1,15 @@
-import request from 'request-promise';
-import config from '../config.json';
+const WebClient = require('@slack/client').WebClient;
 
-const INCOMING_WEBHOOK_URL = config.slack.incomingWebhookURL;
-
-export const postOnSlack = json => request({
-  json: { username: 'pledge', icon_emoji: ':dog:', ...json },
-  url: INCOMING_WEBHOOK_URL,
-  method: 'POST'
-});
+export const postOnSlack = (json, botAccessToken) => {
+  console.log(' =>  => botAccessToken', botAccessToken);
+  const web = new WebClient(botAccessToken);
+  web.chat.postMessage(json.channel, json.text, json.opts, (err) => {
+    if (err) {
+      console.log('Error:', err);
+    }
+  });
+};
 
 export const postOnSlackMultipleChannels =
-  (json, channels) => Promise.all(channels.map(c => postOnSlack({ channel: c, ...json })));
+  (json, channels, botAccessToken) => Promise.all(channels.map(c =>
+    postOnSlack({ channel: c, ...json }, botAccessToken)));

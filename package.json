@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/buildo/pledge#readme",
   "dependencies": {
+    "@slack/client": "^3.8.1",
     "babel-core": "^6.4.5",
     "babel-polyfill": "^6.4.5",
     "babel-runtime": "^6.9.2",
