@@ -51,7 +51,7 @@ async function newPledge({ text, requester }, botAccessToken) {
 }
 
 async function getPledgesList(requester, botAccessToken) {
-  const teamId = db.getTeamByBotAccessToken(botAccessToken).teamId;
+  const teamId = (await db.getTeamByBotAccessToken(botAccessToken)).teamId;
   const { requests, pledges } = await db.getList(requester, teamId);
 
   const baseURL = config.domain;
@@ -65,12 +65,13 @@ async function getPledgesList(requester, botAccessToken) {
 export async function findNewNotifications() {
   // notify for pledges that have expired
   const expiredPledges = await db.findAllPledgesExpiredToNotify();
-  expiredPledges.map(async p => {
+  await Promise.all(expiredPledges.map(async p => {
+    const botAccessToken = (await db.getTeam(p.teamId)).botAccessToken;
     await slack.postOnSlackMultipleChannels({
       text: `pledge ${p.content} expired just now`
-    }, [p.requester, p.performer], (await db.getTeam(p.teamId)).botAccessToken);
+    }, [p.requester, p.performer], botAccessToken);
     await db.setExpiredNotificationAsSentOnPledge(p.id);
-  });
+  }));
 }
 
 setInterval(findNewNotifications, 60 * 1000);
@@ -98,7 +99,7 @@ router.get('/callback', async (req, res) => {
   });
 });
 
-router.post('/slackCommand', async ({ body: { text, user_name, user_id, team_id } }, res) => {
+router.post('/slackCommand', async ({ body: { text, user_name, team_id } }, res) => {
   debug({ text, user_name });
   const requester = `@${user_name}`;
 

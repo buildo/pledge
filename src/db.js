@@ -46,13 +46,13 @@ export const insertTeam = (teamId, teamName, botUserId, botAccessToken) => {
 
 export const getList = async (requester, teamId) => {
   const requests = (await db.all(`
-    SELECT id, requester, performer, content, deadline
+    SELECT id, teamId, requester, performer, content, deadline
     FROM pledges
     WHERE requester = ? AND teamId = ? AND completed = 0
   `, requester, teamId)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
 
   const pledges = (await db.all(`
-    SELECT id, requester, performer, content, deadline
+    SELECT id, teamId, requester, performer, content, deadline
     FROM pledges
     WHERE performer = ? AND teamId = ? AND completed = 0
   `, requester, teamId)).map(x => ({ ...x, deadline: formatDate(new Date(x.deadline)) }));
@@ -131,7 +131,7 @@ export const init = async (dbFilename = config.db) => {
     SELECT 1 FROM sqlite_master WHERE name ='pledges' and type='table';
   `));
   if (!hasPledgesTable) {
-    createTables();
+    await createTables();
   }
 };
 
