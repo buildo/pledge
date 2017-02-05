@@ -14,6 +14,7 @@
     "build": "npm run clean && babel src --out-dir lib && cp config.json lib || true",
     "watch": "npm run clean && cp config.json lib && babel src --out-dir lib --watch",
     "start": "DEBUG=pledge,http,express:* node lib/index.js",
+    "restart": "DEBUG=pledge,http,express:* nodemon --config nodemon.json lib/index.js",
     "test": "jest"
   },
   "repository": {
@@ -54,6 +55,7 @@
     "babel-preset-stage-0": "^6.5.0",
     "eslint": "^2.4.0",
     "eslint-config-buildo": "github:buildo/eslint-config-buildo",
-    "jest": "^18.1.0"
+    "jest": "^18.1.0",
+    "nodemon": "^1.11.0"
   }
 }
