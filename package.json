@@ -41,6 +41,7 @@
     "mockdate": "^2.0.1",
     "request": "^2.75.0",
     "request-promise": "^2.0.1",
+    "simple-oauth2": "^1.0.3",
     "sqlite": "^2.0.2",
     "supertest": "^2.0.1"
   },
