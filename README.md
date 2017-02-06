@@ -6,7 +6,7 @@ A slack bot that helps your team keep commitments
 
 ## install
 
-- close this repo, then `npm run build`, `npm run start`
+- clone this repo, then `npm run build`, `npm run start`
 - with your browser, go to `http://my.pledge.deploy.com/add-to-slack` and authorize pledge on your slack team
 
 ## how to use
