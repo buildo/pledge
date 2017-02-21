@@ -14,13 +14,15 @@ const getList = () => {
   return request(app).post('/slackCommand')
     .send('user_name=requester')
     .send('text=list')
+    .send('team_id=TEAM_ID')
     .expect(200);
 };
 
 const createPledge = (by) => {
   return request(app).post('/slackCommand')
     .send('user_name=requester')
-    .send(`text=@performer content by ${by}`)
+    .send(`text=<@U123456789|performer> content by ${by}`)
+    .send('team_id=TEAM_ID')
     .expect(200);
 };
 
@@ -32,6 +34,7 @@ describe('app', () => {
       slack.postOnSlackMultipleChannels.mockClear();
       slack.postOnSlack.mockClear();
       await db.init(`db-${Math.random().toString(36).substr(2, 20)}`);
+      await db.insertTeam('TEAM_ID', 'TEAM_NAME', 'BOT_USER_ID', 'BOT_ACCESS_TOKEN');
     });
 
     afterEach(async () => {
@@ -72,7 +75,7 @@ describe('app', () => {
         expect(slack.postOnSlack.mock.calls[0][0].text)
           .toMatch('@requester asked you to \"content\" by tomorrow at 10am');
         expect(slack.postOnSlack.mock.calls[0][0].channel)
-          .toMatch('@performer');
+          .toMatch('U123456789');
         return getList().then((res) => {
           expect(typeof res.text).toBe('string');
           // pledge is present
