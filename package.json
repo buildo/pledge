@@ -14,6 +14,7 @@
     "build": "npm run clean && babel src --out-dir lib && cp config.json lib || true",
     "watch": "npm run clean && cp config.json lib && babel src --out-dir lib --watch",
     "start": "DEBUG=pledge,http,express:* node lib/index.js",
+    "restart": "DEBUG=pledge,http,express:* nodemon --config nodemon.json lib/index.js",
     "test": "jest"
   },
   "repository": {
@@ -27,6 +28,7 @@
   },
   "homepage": "https://github.com/buildo/pledge#readme",
   "dependencies": {
+    "@slack/client": "^3.8.1",
     "babel-core": "^6.4.5",
     "babel-polyfill": "^6.4.5",
     "babel-runtime": "^6.9.2",
@@ -39,6 +41,7 @@
     "mockdate": "^2.0.1",
     "request": "^2.75.0",
     "request-promise": "^2.0.1",
+    "simple-oauth2": "^1.0.3",
     "sqlite": "^2.0.2",
     "supertest": "^2.0.1"
   },
@@ -54,6 +57,7 @@
     "babel-preset-stage-0": "^6.5.0",
     "eslint": "^2.4.0",
     "eslint-config-buildo": "github:buildo/eslint-config-buildo",
-    "jest": "^18.1.0"
+    "jest": "^18.1.0",
+    "nodemon": "^1.11.0"
   }
 }
