@@ -70,7 +70,7 @@ router.post('/slackCommand', async ({ body: { text, user_name } }, res) => {
   const requester = `@${user_name}`;
 
   if (typeof text === 'undefined' || typeof user_name === 'undefined') {
-    res.status(422).send('command does not respect Slack POST format');
+    return res.status(422).send('command does not respect Slack POST format');
   }
 
   try {
@@ -82,7 +82,7 @@ router.post('/slackCommand', async ({ body: { text, user_name } }, res) => {
     }
   } catch (err) {
     debug(err);
-    res.send(`Error: ${err.message}`);
+    return res.send(`Error: ${err.message}`);
   }
 });
 
@@ -92,17 +92,12 @@ router.get('/deletePledge/:pledgeId', async ({ params: { pledgeId } }, res) => {
     await db.deletePledge(pledgeId);
     // notify on slack
     const notificationMessage = `pledge "${content}" has been deleted`;
-    await slack.postOnSlack({
-      text: notificationMessage,
-      channel: performer
-    });
-    await slack.postOnSlack({
-      text: notificationMessage,
-      channel: requester
-    });
-    res.send(`Successfully deleted pledge #${pledgeId}`);
+    await slack.postOnSlackMultipleChannels({
+      text: notificationMessage
+    }, [requester, performer]);
+    return res.send(`Successfully deleted pledge #${pledgeId}`);
   } catch (e) {
-    res.send(`Error: ${e.message}`);
+    return res.send(`Error: ${e.message}`);
   }
 });
 
@@ -112,17 +107,12 @@ router.get('/completePledge/:pledgeId', async ({ params: { pledgeId } }, res) =>
     await db.completePledge(pledgeId);
     // notify on slack
     const notificationMessage = `pledge "${content}" has been completed !!!`;
-    await slack.postOnSlack({
-      text: notificationMessage,
-      channel: performer
-    });
-    await slack.postOnSlack({
-      text: notificationMessage,
-      channel: requester
-    });
-    res.send(`Successfully completed pledge #${pledgeId}`);
+    await slack.postOnSlackMultipleChannels({
+      text: notificationMessage
+    }, [requester, performer]);
+    return res.send(`Successfully completed pledge #${pledgeId}`);
   } catch (e) {
-    res.send(`Error: ${e.message}`);
+    return res.send(`Error: ${e.message}`);
   }
 });
 
